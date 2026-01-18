@@ -1,0 +1,63 @@
+import os
+import sys
+import subprocess
+import re
+
+ROOT = os.path.expanduser("~/kiosk_barrierfree")
+
+def run_step1():
+    p = subprocess.run(
+        [sys.executable, os.path.join(ROOT, "scripts", "step1_eye_then_gesture_yolo.py")],
+        cwd=ROOT,
+        capture_output=True,
+        text=True
+    )
+    return (p.stdout or "") + "\n" + (p.stderr or "")
+
+def detect_mode(log: str):
+    if re.search(r"\bNORMAL MODE\b", log, re.IGNORECASE):
+        return "NORMAL"
+    if re.search(r"\bACCESSIBLE MODE\b", log, re.IGNORECASE):
+        return "ACCESSIBLE"
+    if "일반모드" in log or "(fist)" in log:
+        return "NORMAL"
+    if "시각장애인" in log or "(palm)" in log:
+        return "ACCESSIBLE"
+    return None
+
+def pick_port():
+    candidates = ["/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyUSB0", "/dev/ttyUSB1"]
+    for c in candidates:
+        if os.path.exists(c):
+            return c
+    return "/dev/ttyACM0"
+
+def run_menu(port):
+    env = os.environ.copy()
+    env["JOY_PORT"] = port
+    env["PYTHONPATH"] = ROOT + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    return subprocess.run(
+        [sys.executable, os.path.join(ROOT, "scripts", "main_menu_run.py")],
+        cwd=ROOT,
+        env=env
+    ).returncode
+
+def main():
+    port = os.environ.get("JOY_PORT", pick_port())
+    log = run_step1()
+    mode = detect_mode(log)
+
+    print("\n=== STEP1 LOG (tail) ===")
+    lines = [l for l in log.splitlines() if l.strip()]
+    print("\n".join(lines[-30:]))
+
+    if mode is None:
+        print("\n[ERROR] Step1 mode not detected.")
+        sys.exit(1)
+
+    print(f"\n[OK] MODE = {mode}")
+    print(f"[INFO] Starting MENU with JOY_PORT={port} ...\n")
+    sys.exit(run_menu(port))
+
+if __name__ == "__main__":
+    main()
