@@ -1,4 +1,6 @@
 import pygame
+from src.audio.tts import speak
+
 
 class PygameMenu:
     def __init__(self, items, title="Kiosk Menu", width=800, height=480):
@@ -6,8 +8,16 @@ class PygameMenu:
         self.title = title
         self.w = width
         self.h = height
+
         self.idx = 0
         self.cart = []
+
+        # TTS 중복 방지
+        self.last_spoken_idx = None
+
+        # 상태 머신
+        self.state = "BROWSE"      # BROWSE | CONFIRM
+        self.pending_item = None  # 확인 중인 메뉴
 
     def run(self, event_source=None):
         pygame.init()
@@ -20,30 +30,47 @@ class PygameMenu:
 
         running = True
         while running:
+
+            # =========================
+            # 1️⃣ 키보드 이벤트
+            # =========================
             for ev in pygame.event.get():
                 if ev.type == pygame.QUIT:
                     running = False
+
                 if ev.type == pygame.KEYDOWN:
                     if ev.key == pygame.K_UP:
-                        self.idx = (self.idx - 1) % len(self.items)
+                        self._handle_direction("UP")
                     elif ev.key == pygame.K_DOWN:
-                        self.idx = (self.idx + 1) % len(self.items)
+                        self._handle_direction("DOWN")
                     elif ev.key == pygame.K_RETURN:
-                        self.cart.append(self.items[self.idx])
+                        self._handle_enter()
                     elif ev.key == pygame.K_ESCAPE:
                         running = False
 
+            # =========================
+            # 2️⃣ 조이스틱 이벤트
+            # =========================
             if event_source is not None:
                 e = event_source()
-                if e == "UP":
-                    self.idx = (self.idx - 1) % len(self.items)
-                elif e == "DOWN":
-                    self.idx = (self.idx + 1) % len(self.items)
+                if e in ("UP", "DOWN", "LEFT", "RIGHT"):
+                    self._handle_direction(e)
                 elif e == "ENTER":
-                    self.cart.append(self.items[self.idx])
+                    self._handle_enter()
                 elif e == "BACK":
                     running = False
 
+            # =========================
+            # 3️⃣ 메뉴 포커스 TTS (BROWSE 상태에서만)
+            # =========================
+            if self.state == "BROWSE" and self.idx != self.last_spoken_idx:
+                item = self.items[self.idx]
+                speak(f"{item['name']} {item['price']}원")
+                self.last_spoken_idx = self.idx
+
+            # =========================
+            # 4️⃣ 화면 렌더링
+            # =========================
             screen.fill((15, 15, 18))
 
             title_surf = font.render(self.title, True, (240, 240, 240))
@@ -67,3 +94,44 @@ class PygameMenu:
 
         pygame.quit()
         return self.cart
+
+    # =========================
+    # 🔽 방향 입력 처리
+    # =========================
+    def _handle_direction(self, direction):
+        if self.state == "CONFIRM":
+            # ❌ 주문 취소
+            speak("원하시는 메뉴를 선택해 주세요.")
+            self.state = "BROWSE"
+            self.pending_item = None
+            self.last_spoken_idx = None
+            return
+
+        # 메뉴 이동
+        if direction == "UP":
+            self.idx = (self.idx - 1) % len(self.items)
+        elif direction == "DOWN":
+            self.idx = (self.idx + 1) % len(self.items)
+
+    # =========================
+    # 🔘 ENTER 처리
+    # =========================
+    def _handle_enter(self):
+        if self.state == "BROWSE":
+            # 1️⃣ 메뉴 선택 → 확인 단계
+            self.pending_item = self.items[self.idx]
+            speak(
+                f"{self.pending_item['name']}을 선택하였습니다. "
+                "이 메뉴로 주문하시겠습니까? "
+                "맞으면 조이스틱을 한번 더 누르고 "
+                "아니면 조이스틱을 아래로 움직여 주세요."
+            )
+            self.state = "CONFIRM"
+
+        elif self.state == "CONFIRM":
+            # 2️⃣ 주문 확정
+            self.cart.append(self.pending_item)
+            speak(f"{self.pending_item['name']} 주문이 완료되었습니다.")
+            self.pending_item = None
+            self.state = "BROWSE"
+            self.last_spoken_idx = None
