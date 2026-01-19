@@ -69,10 +69,14 @@ class PygameMenu:
             # =========================
             # 3️⃣ 메뉴 포커스 TTS (BROWSE 상태에서만)
             # =========================
-            if self.state == "BROWSE" and self.idx != self.last_spoken_idx:
-                item = self.items[self.idx]
-                speak(f"{item['name']} {item['price']}원")
-                self.last_spoken_idx = self.idx
+            if self.state == "BROWSE":
+                if self.skip_next_focus_tts:
+                    self.skip_next_focus_tts = False
+                    self.last_spoken_idx = self.idx
+                elif self.idx != self.last_spoken_idx:
+                    item = self.items[self.idx]
+                    speak(f"{item['name']} {item['price']}원")
+                    self.last_spoken_idx = self.idx
 
             # =========================
             # 4️⃣ 화면 렌더링
