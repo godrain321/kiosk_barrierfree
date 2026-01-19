@@ -114,7 +114,7 @@ def main():
                 cv2.putText(frame, f"Hold still: {held:.1f}/{EYE_HOLD_SEC:.1f}s",
                             (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
                 if held >= EYE_HOLD_SEC:
-                    speak("어서오세요. 시각장애인이시면 가슴 앞에 주먹을 쥐어주세요.")
+                    speak("어서오세요. 시각장애인이시면 오른손을 들어 손바닥을 보여주세요.")
                     state = "GESTURE"
             else:
                 eye_hold_start = None

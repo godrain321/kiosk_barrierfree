@@ -1,6 +1,8 @@
 import pygame
 from src.audio.tts import speak
+import os
 
+skip_first = os.environ.get("SKIP_FIRST_MENU_TTS") == "1"
 
 class PygameMenu:
     def __init__(self, items, title="Kiosk Menu", width=800, height=480):
@@ -18,6 +20,10 @@ class PygameMenu:
         # 상태 머신
         self.state = "BROWSE"      # BROWSE | CONFIRM
         self.pending_item = None  # 확인 중인 메뉴
+        
+        self.skip_next_focus_tts = skip_first
+
+        
 
     def run(self, event_source=None):
         pygame.init()
@@ -104,7 +110,9 @@ class PygameMenu:
             speak("원하시는 메뉴를 선택해 주세요.")
             self.state = "BROWSE"
             self.pending_item = None
-            self.last_spoken_idx = None
+            
+            # 🔴 메뉴 복귀 시 포커스 TTS 1회 스킵
+            self.skip_next_focus_tts = True
             return
 
         # 메뉴 이동
@@ -134,4 +142,5 @@ class PygameMenu:
             speak(f"{self.pending_item['name']} 주문이 완료되었습니다.")
             self.pending_item = None
             self.state = "BROWSE"
-            self.last_spoken_idx = None
+                # 🔴 다음 포커스 TTS 한 번 스킵
+            self.skip_next_focus_tts = True

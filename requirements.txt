@@ -5,3 +5,4 @@ ultralytics
 numpy
 pyyaml
 pyserial
+gtts

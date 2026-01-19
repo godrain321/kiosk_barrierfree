@@ -6,10 +6,20 @@ from src.audio.tts import speak
 
 ROOT = os.path.expanduser("~/kiosk_barrierfree")
 
+
+
 def run_step1():
+    env = os.environ.copy()
+    env["PYTHONPATH"] = ROOT
+
     p = subprocess.run(
-        [sys.executable, os.path.join(ROOT, "scripts", "step1_eye_then_gesture_yolo.py")],
+        [
+            sys.executable,
+            "-m",
+            "scripts.step1_eye_then_gesture_yolo"
+        ],
         cwd=ROOT,
+        env=env,
         capture_output=True,
         text=True
     )
@@ -33,15 +43,21 @@ def pick_port():
             return c
     return "/dev/ttyACM0"
 
-def run_menu(port):
+def run_menu(port, skip_first_tts=False):
     env = os.environ.copy()
     env["JOY_PORT"] = port
     env["PYTHONPATH"] = ROOT + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+   
+    if skip_first_tts:
+        env["SKIP_FIRST_MENU_TTS"] ="1"
+        
     return subprocess.run(
         [sys.executable, os.path.join(ROOT, "scripts", "main_menu_run.py")],
         cwd=ROOT,
         env=env
     ).returncode
+
+
 
 def main():
     port = os.environ.get("JOY_PORT", pick_port())
@@ -57,17 +73,16 @@ def main():
         sys.exit(1)
         
     if mode == "ACCESSIBLE":
-    speak(
-        "시각장애인 모드입니다. "
-        "정면에 설치된 조이스틱을 이용하여 메뉴를 고르실 수 있습니다. "
-        "조이스틱을 누르시면 메뉴가 선택됩니다."
-    )
+        speak(
+            "시각장애인 모드입니다. "
+            "정면에 설치된 조이스틱을 이용하여 메뉴를 고르실 수 있습니다. "
+            "조이스틱을 누르시면 메뉴가 선택됩니다."
+        )
 
     
     print(f"\n[OK] MODE = {mode}")
-    
     print(f"[INFO] Starting MENU with JOY_PORT={port} ...\n")
-    sys.exit(run_menu(port))
-
+    sys.exit(run_menu(port, skip_first_tts=(mode == "ACCESSIBLE")))
+    
 if __name__ == "__main__":
     main()
