@@ -3,6 +3,8 @@ import cv2
 from pathlib import Path
 from picamera2 import Picamera2
 from ultralytics import YOLO
+# 상단 import
+from src.audio.tts import speak
 
 EYE_HOLD_SEC = 3.0
 GESTURE_STABLE_SEC = 3.0
@@ -105,12 +107,14 @@ def main():
         if state == "EYE_HOLD":
             ok = eyes_detected(frame)
             if ok:
+
                 if eye_hold_start is None:
                     eye_hold_start = time.time()
                 held = time.time() - eye_hold_start
                 cv2.putText(frame, f"Hold still: {held:.1f}/{EYE_HOLD_SEC:.1f}s",
                             (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
                 if held >= EYE_HOLD_SEC:
+                    speak("어서오세요. 시각장애인이시면 가슴 앞에 주먹을 쥐어주세요.")
                     state = "GESTURE"
             else:
                 eye_hold_start = None

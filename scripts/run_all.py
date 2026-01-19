@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import re
+from src.audio.tts import speak
 
 ROOT = os.path.expanduser("~/kiosk_barrierfree")
 
@@ -54,8 +55,17 @@ def main():
     if mode is None:
         print("\n[ERROR] Step1 mode not detected.")
         sys.exit(1)
+        
+    if mode == "ACCESSIBLE":
+    speak(
+        "시각장애인 모드입니다. "
+        "정면에 설치된 조이스틱을 이용하여 메뉴를 고르실 수 있습니다. "
+        "조이스틱을 누르시면 메뉴가 선택됩니다."
+    )
 
+    
     print(f"\n[OK] MODE = {mode}")
+    
     print(f"[INFO] Starting MENU with JOY_PORT={port} ...\n")
     sys.exit(run_menu(port))
 
