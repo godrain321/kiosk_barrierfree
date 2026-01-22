@@ -3,6 +3,10 @@ import sys
 import subprocess
 import re
 from src.audio.tts import speak
+from src.door_check.state import disable_door_tts
+import threading
+from src.door_check.server import run_server
+
 
 ROOT = os.path.expanduser("~/kiosk_barrierfree")
 
@@ -60,9 +64,14 @@ def run_menu(port, skip_first_tts=False):
 
 
 def main():
+    t = threading.Thread(target=run_server, daemon=True)
+    t.start()
+
     port = os.environ.get("JOY_PORT", pick_port())
     log = run_step1()
     mode = detect_mode(log)
+
+    disable_door_tts()   # 문 열릴 때 음성나오는거 중지.
 
     print("\n=== STEP1 LOG (tail) ===")
     lines = [l for l in log.splitlines() if l.strip()]
@@ -73,6 +82,7 @@ def main():
         sys.exit(1)
         
     if mode == "ACCESSIBLE":
+       
         speak(
             "시각장애인 모드입니다. "
             "정면에 설치된 조이스틱을 이용하여 메뉴를 고르실 수 있습니다. "
