@@ -1,7 +1,13 @@
 📌 Project Overview
 본 프로젝트는 시각장애인의 독립적인 키오스크 이용을 돕기 위해 음성 안내와 제스처 인식, 햅틱 인터페이스를 결합한 안내 시스템입니다. 출입문 진입부터 메뉴 결제까지의 전 과정을 비시각적 피드백으로 설계하였습니다.
 
-Note: 본 프로젝트는 기존 베리어 프리 키오스크의 상용화 수준을 고려하여, 기술적 구현 및 로직 검증 단계에서 중단되었습니다. 하지만 이 과정에서 구축한 FSM(상태 머신) 설계와 시스템 통합 역량은 현재 진행 중인 화재 대피 로봇 프로젝트의 기초가 되었습니다.
+# Demo video
+1. Full System Operation (excluding Proximity Sensor)
+   https://www.youtube.com/watch?v=JtLEo4CAmX4
+2. Proximity Sensor Integration Test
+   https://www.youtube.com/shorts/Xr2QyoMLNQA
+   
+Note: 본 프로젝트는 시각장애인을 위한 키오스크와 주문 완료 후 자율주행 모듈을 통한 안내까지를 목적으로 하였으나 기존 베리어 프리 키오스크가 현재 매우 상용화되었고 창의성이 떨어진다고 판단하여 중단함. 하지만 이 프로젝트를 진행하며 자율주행에 대해 공부했던 지식을 바탕으로 화재대피로봇제작을 목표로 잡음. 
 
 ⚙️ System Workflow (Core Logic)
 1. Entrance & Guidance (진입 감지 및 안내)
